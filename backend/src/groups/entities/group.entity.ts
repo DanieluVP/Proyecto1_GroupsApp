@@ -4,10 +4,11 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
-  ManyToMany,
-  JoinTable,
+  OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { GroupMember } from './group-member.entity';
 
 @Entity()
 export class Group {
@@ -17,12 +18,18 @@ export class Group {
   @Column()
   name: string;
 
-  @ManyToOne(() => User, { eager: true })
+  @Column({ nullable: true })
+  description?: string;
+
+  @Column()
+  adminId: string;
+
+  @ManyToOne(() => User, { eager: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'adminId' })
   admin: User;
 
-  @ManyToMany(() => User, (user) => user.groups, { eager: true })
-  @JoinTable()
-  members: User[];
+  @OneToMany(() => GroupMember, (gm) => gm.group, { eager: false })
+  groupMembers: GroupMember[];
 
   @CreateDateColumn()
   createdAt: Date;

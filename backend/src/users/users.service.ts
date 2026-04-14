@@ -26,4 +26,12 @@ export class UsersService {
   findById(id: string): Promise<User | null> {
     return this.usersRepo.findOne({ where: { id } });
   }
+
+  searchByUsername(q: string): Promise<User[]> {
+    return this.usersRepo
+      .createQueryBuilder('user')
+      .where('user.username ILIKE :q', { q: `%${q}%` })
+      .select(['user.id', 'user.username', 'user.email', 'user.avatarUrl', 'user.createdAt'])
+      .getMany();
+  }
 }

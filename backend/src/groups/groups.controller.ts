@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddMemberDto } from './dto/add-member.dto';
@@ -11,7 +11,7 @@ export class GroupsController {
 
   @Post()
   create(@Body() dto: CreateGroupDto, @Request() req: any) {
-    return this.groupsService.create(dto.name, req.user.id);
+    return this.groupsService.create(dto.name, req.user.id, dto.description);
   }
 
   @Get()
@@ -27,5 +27,10 @@ export class GroupsController {
   @Post(':id/members')
   addMember(@Param('id') id: string, @Body() dto: AddMemberDto, @Request() req: any) {
     return this.groupsService.addMember(id, dto.userId, req.user.id);
+  }
+
+  @Delete(':id/members/:userId')
+  removeMember(@Param('id') id: string, @Param('userId') userId: string, @Request() req: any) {
+    return this.groupsService.removeMember(id, userId, req.user.id);
   }
 }

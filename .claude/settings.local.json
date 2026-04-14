@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(find '/Users/nicolasrico4/Documents/Universidad/Septimo Semestre/Topicos en Telematica/Proyecto1_GroupsApp' -not -path */node_modules/* -not -path */.git/* -type d)"
     ]
   }
 }

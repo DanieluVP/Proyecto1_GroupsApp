@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany } from 'typeorm';
-import { Group } from '../../groups/entities/group.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity()
 export class User {
@@ -15,9 +14,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ nullable: true })
+  avatarUrl?: string;
+
   @CreateDateColumn()
   createdAt: Date;
-
-  @ManyToMany(() => Group, (group) => group.members)
-  groups: Group[];
 }
