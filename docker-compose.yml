@@ -239,15 +239,18 @@ services:
   frontend:
     build:
       context: ./frontend
+      # NEXT_PUBLIC_* must be passed as build args (they are baked in at next build).
+      # For local dev, localhost:3000 is correct (api-gateway port exposed on the host).
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3000
+        NEXT_PUBLIC_WS_URL: http://localhost:3000
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3000
-      NEXT_PUBLIC_WS_URL: http://localhost:3000
-      PORT: 3006
+      PORT: 3000
       HOSTNAME: 0.0.0.0
     depends_on:
       - api-gateway
     ports:
-      - "3006:3006"
+      - "3006:3000"
 
 volumes:
   postgres_data:

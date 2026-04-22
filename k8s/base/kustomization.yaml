@@ -21,6 +21,7 @@ resources:
   - presence-service.yaml
   - files-service.yaml
   - api-gateway.yaml
+  - frontend.yaml
   # Ingress
   - ingress.yaml
   # Autoscaling

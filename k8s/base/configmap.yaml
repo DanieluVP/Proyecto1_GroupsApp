@@ -23,5 +23,8 @@ data:
   # Service gRPC URLs
   AUTH_SERVICE_GRPC: "auth-service:5001"
   GROUPS_SERVICE_GRPC: "groups-service:5002"
-  # Frontend URL (for CORS)
-  FRONTEND_URL: "http://frontend:3000"
+  # Frontend URL (for CORS).
+  # EKS: update to your actual LoadBalancer/Ingress URL after running:
+  #   kubectl get svc -n ingress-nginx
+  # Or leave as "*" to allow any origin (valid for demos — NOT for production).
+  FRONTEND_URL: "*"

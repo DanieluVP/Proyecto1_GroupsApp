@@ -11,15 +11,33 @@ metadata:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header Upgrade $http_upgrade;
       proxy_set_header Connection "upgrade";
+    # Use-regex allows mix of Exact and Prefix rules
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /
+          # API and WebSocket → api-gateway (more specific paths first)
+          - path: /api
             pathType: Prefix
             backend:
               service:
                 name: api-gateway
+                port:
+                  number: 3000
+          - path: /socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 3000
+          # Everything else (Next.js pages, _next/static, etc.) → frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
                 port:
                   number: 3000

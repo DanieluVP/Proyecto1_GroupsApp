@@ -4,7 +4,10 @@ metadata:
   name: messaging-service
   namespace: groupsapp
 spec:
-  replicas: 2
+  # NOTE: Socket.IO requires sticky sessions across replicas.
+  # With 1 replica, all WebSocket connections share the same in-memory state.
+  # To scale horizontally, add @socket.io/redis-adapter (Redis is available in the cluster).
+  replicas: 1
   selector:
     matchLabels:
       app: messaging-service

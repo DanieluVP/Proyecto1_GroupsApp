@@ -20,8 +20,15 @@ const PUBLIC_PATHS = ['/auth/register', '/auth/login', '/health', '/files/local'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // CORS: if FRONTEND_URL="*" (demo/EKS mode) we reflect the request origin so
+  // credentials still work. Set FRONTEND_URL to the actual public URL in production.
+  const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3006';
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3006',
+    origin:
+      allowedOrigin === '*'
+        ? (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) =>
+            cb(null, true)
+        : allowedOrigin,
     credentials: true,
   });
 
