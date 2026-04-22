@@ -1,40 +1,253 @@
 services:
+  # ─── Infrastructure ──────────────────────────────────────────────────────────
+
   postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: groupsapp
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-dbs.sql:/docker-entrypoint-initdb.d/init-dbs.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
+      retries: 10
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD-SHELL", "cub zk-ready localhost:2181 10 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 15s
+      retries: 10
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 24
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  consul:
+    image: hashicorp/consul:1.19
+    command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0 -data-dir=/consul/data
+    ports:
+      - "8500:8500"
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
       retries: 5
 
-  backend:
-    build: ./backend
-    ports:
-      - "3000:3000"
-    env_file:
-      - path: ./backend/.env
-        required: false
+  # ─── Microservices ───────────────────────────────────────────────────────────
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    environment:
+      PORT: 3001
+      GRPC_PORT: 5001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: groupsapp_auth
+      JWT_SECRET: dev-secret-change-in-prod
+      JWT_EXPIRES_IN: 7d
+      NODE_ENV: development
+      CONSUL_HOST: consul
     depends_on:
       postgres:
         condition: service_healthy
-
-  frontend:
-    build: ./frontend
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     ports:
       - "3001:3001"
-    env_file:
-      - path: ./frontend/.env.local
-        required: false
+      - "5001:5001"
+
+  groups-service:
+    build:
+      context: .
+      dockerfile: services/groups-service/Dockerfile
+    environment:
+      PORT: 3002
+      GRPC_PORT: 5002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: groupsapp_groups
+      JWT_SECRET: dev-secret-change-in-prod
+      NODE_ENV: development
+      KAFKA_BROKERS: kafka:9092
+      CONSUL_HOST: consul
     depends_on:
-      - backend
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3002/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "3002:3002"
+      - "5002:5002"
+
+  messaging-service:
+    build:
+      context: .
+      dockerfile: services/messaging-service/Dockerfile
+    environment:
+      PORT: 3003
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: groupsapp_messaging
+      JWT_SECRET: dev-secret-change-in-prod
+      NODE_ENV: development
+      KAFKA_BROKERS: kafka:9092
+      GROUPS_SERVICE_GRPC: groups-service:5002
+      CONSUL_HOST: consul
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      groups-service:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "3003:3003"
+
+  presence-service:
+    build:
+      context: .
+      dockerfile: services/presence-service/Dockerfile
+    environment:
+      PORT: 3004
+      JWT_SECRET: dev-secret-change-in-prod
+      NODE_ENV: development
+      KAFKA_BROKERS: kafka:9092
+      CONSUL_HOST: consul
+    depends_on:
+      kafka:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3004/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "3004:3004"
+
+  files-service:
+    build:
+      context: .
+      dockerfile: services/files-service/Dockerfile
+    environment:
+      PORT: 3005
+      JWT_SECRET: dev-secret-change-in-prod
+      NODE_ENV: development
+      AWS_REGION: us-east-1
+      AWS_S3_BUCKET: groupsapp-files
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      GATEWAY_URL: http://localhost:3000
+      CONSUL_HOST: consul
+    depends_on:
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3005/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "3005:3005"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    environment:
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service:3001
+      GROUPS_SERVICE_URL: http://groups-service:3002
+      MESSAGING_SERVICE_URL: http://messaging-service:3003
+      PRESENCE_SERVICE_URL: http://presence-service:3004
+      FILES_SERVICE_URL: http://files-service:3005
+      AUTH_SERVICE_GRPC: auth-service:5001
+      FRONTEND_URL: http://localhost:3006
+      CONSUL_HOST: consul
+      NODE_ENV: development
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      groups-service:
+        condition: service_healthy
+      messaging-service:
+        condition: service_healthy
+      presence-service:
+        condition: service_healthy
+      files-service:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_WS_URL: http://localhost:3000
+      PORT: 3006
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      - api-gateway
+    ports:
+      - "3006:3006"
 
 volumes:
   postgres_data:

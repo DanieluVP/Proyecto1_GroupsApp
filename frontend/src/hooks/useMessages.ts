@@ -59,7 +59,7 @@ export function useMessages(
   const sendMessage = useCallback(
     (content: string, fileUrl?: string) => {
       const socket = getSocket();
-      if (!socket || !content.trim()) return;
+      if (!socket || (!content.trim() && !fileUrl)) return;
       socket.emit('send:message', { targetId, targetType, content: content.trim(), fileUrl });
     },
     [targetId, targetType],

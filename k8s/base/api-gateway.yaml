@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: groupsapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: groupsapp/api-gateway:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: NODE_ENV
+            - name: AUTH_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: AUTH_SERVICE_URL
+            - name: GROUPS_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: GROUPS_SERVICE_URL
+            - name: MESSAGING_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: MESSAGING_SERVICE_URL
+            - name: PRESENCE_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: PRESENCE_SERVICE_URL
+            - name: FILES_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: FILES_SERVICE_URL
+            - name: AUTH_SERVICE_GRPC
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: AUTH_SERVICE_GRPC
+            - name: FRONTEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: FRONTEND_URL
+            - name: CONSUL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: groupsapp-config
+                  key: CONSUL_HOST
+            - name: SERVICE_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: groupsapp
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

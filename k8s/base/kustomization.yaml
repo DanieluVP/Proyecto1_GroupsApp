@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: groupsapp
+
+resources:
+  # Namespace
+  - namespace.yaml
+  # Config
+  - secrets.yaml
+  - configmap.yaml
+  # Infrastructure
+  - postgres.yaml
+  - redis.yaml
+  - kafka.yaml
+  - consul.yaml
+  # Microservices
+  - auth-service.yaml
+  - groups-service.yaml
+  - messaging-service.yaml
+  - presence-service.yaml
+  - files-service.yaml
+  - api-gateway.yaml
+  # Ingress
+  - ingress.yaml
+  # Autoscaling
+  - hpa.yaml

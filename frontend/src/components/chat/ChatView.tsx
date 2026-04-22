@@ -16,18 +16,26 @@ interface ChatViewProps {
 
 export function ChatView({ targetId, targetType, currentUserId, headerSlot, placeholder }: ChatViewProps) {
   const { messages, sendMessage, markAllRead } = useMessages(targetId, targetType);
-  const { joinRoom, leaveRoom } = useSocket();
+  const { socket, joinRoom, leaveRoom } = useSocket();
 
   useEffect(() => {
+    if (!socket) return;
     if (targetType === 'group') joinRoom(targetId, 'join:group');
     if (targetType === 'channel') joinRoom(targetId, 'join:channel');
+    if (targetType === 'dm') socket.emit('join:dm', { userId: targetId });
     markAllRead();
 
     return () => {
       if (targetType === 'group') leaveRoom(targetId, 'leave:group');
       if (targetType === 'channel') leaveRoom(targetId, 'leave:channel');
     };
-  }, [targetId, targetType]);
+  }, [targetId, targetType, socket]);
+
+  // Auto-mark as read when new messages arrive while the chat is open
+  useEffect(() => {
+    if (!socket || messages.length === 0) return;
+    markAllRead();
+  }, [messages.length, socket]);
 
   return (
     <div className="flex flex-col h-full">

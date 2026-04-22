@@ -1,12 +1,17 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { getSocket } from '@/lib/socket';
-import { useAuthStore } from '@/store/authStore';
+import { useState, useEffect, useRef } from 'react';
+import { getSocket, onSocketChange } from '@/lib/socket';
+import type { Socket } from 'socket.io-client';
 
 export function useSocket() {
-  const { token } = useAuthStore();
+  const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
   const joined = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    setSocketInstance(getSocket());
+    return onSocketChange(() => setSocketInstance(getSocket()));
+  }, []);
 
   const joinRoom = (roomId: string, event: 'join:group' | 'join:channel') => {
     const socket = getSocket();
@@ -28,5 +33,5 @@ export function useSocket() {
     };
   }, []);
 
-  return { socket: getSocket(), joinRoom, leaveRoom, isConnected: !!token };
+  return { socket: socketInstance, joinRoom, leaveRoom };
 }

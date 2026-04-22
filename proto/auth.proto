@@ -1,0 +1,17 @@
+syntax = "proto3";
+package auth;
+
+service AuthService {
+  rpc ValidateToken   (TokenRequest)  returns (UserPayload);
+  rpc GetUser         (UserIdRequest) returns (UserPayload);
+}
+
+message TokenRequest  { string token   = 1; }
+message UserIdRequest { string user_id = 1; }
+
+message UserPayload {
+  bool   valid    = 1;
+  string user_id  = 2;
+  string email    = 3;
+  string username = 4;
+}

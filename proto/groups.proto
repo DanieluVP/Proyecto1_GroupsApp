@@ -1,0 +1,12 @@
+syntax = "proto3";
+package groups;
+
+service GroupsService {
+  rpc IsMember        (MemberRequest)  returns (MemberResponse);
+  rpc GetGroupMembers (GroupRequest)   returns (MembersResponse);
+}
+
+message MemberRequest   { string group_id = 1; string user_id = 2; }
+message MemberResponse  { bool   is_member = 1; string role   = 2; }
+message GroupRequest    { string group_id = 1; }
+message MembersResponse { repeated string user_ids = 1; }

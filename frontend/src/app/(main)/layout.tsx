@@ -5,27 +5,31 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { initSocket } from '@/lib/socket';
 import { GroupSidebar } from '@/components/groups/GroupSidebar';
+import { usePresence } from '@/hooks/usePresence';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const { token, init } = useAuthStore();
+  const { token, initialized, init } = useAuthStore();
   const router = useRouter();
+  usePresence();
 
   useEffect(() => {
     init();
   }, [init]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('token');
-    if (!stored) {
+    if (!initialized) return;
+    if (!token) {
       router.replace('/login');
-    } else if (!token) {
-      // still initializing
     } else {
       initSocket(token);
     }
-  }, [token, router]);
+  }, [token, initialized, router]);
 
-  if (!token && typeof window !== 'undefined' && !localStorage.getItem('token')) {
+  if (!initialized) {
+    return null;
+  }
+
+  if (!token) {
     return null;
   }
 

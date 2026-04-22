@@ -3,6 +3,7 @@
 import { useState, useRef, KeyboardEvent } from 'react';
 import { Send, Paperclip } from 'lucide-react';
 import { getSocket } from '@/lib/socket';
+import api from '@/lib/api';
 
 interface MessageInputProps {
   targetId: string;
@@ -65,13 +66,8 @@ export function MessageInput({ targetId, targetType, onSend, placeholder }: Mess
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/files/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      const { url } = await res.json();
+      const res = await api.post<{ url: string }>('/api/files/upload', formData);
+      const { url } = res.data;
       onSend('', url);
     } catch {
       alert('Upload failed');

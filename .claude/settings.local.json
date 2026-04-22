@@ -2,7 +2,23 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)",
-      "Bash(find '/Users/nicolasrico4/Documents/Universidad/Septimo Semestre/Topicos en Telematica/Proyecto1_GroupsApp' -not -path */node_modules/* -not -path */.git/* -type d)"
+      "Bash(find '/Users/nicolasrico4/Documents/Universidad/Septimo Semestre/Topicos en Telematica/Proyecto1_GroupsApp' -not -path */node_modules/* -not -path */.git/* -type d)",
+      "Bash(pkill -f \"dist/main\")",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(done)",
+      "Bash(rm -f dist/tsconfig.tsbuildinfo)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(pkill -f \"nest build\\\\|tsc.*auth-service\\\\|npm run build\")",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(docker compose:*)",
+      "Bash(curl -sv -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -H \"Origin: http://localhost:3006\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"test3@example.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"Test1234!\"\"\"\"}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST http://localhost:3001/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"test3@example.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"Test1234!\"\"\"\"}' echo \"\" curl -s -X POST http://localhost:3001/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"test3@example.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"Test1234!\"\"\"\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -sv -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"test3@example.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"Test1234!\"\"\"\"}')",
+      "Bash(./node_modules/.bin/tsc -p tsconfig.build.json)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/socket.io/?EIO=4&transport=polling\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006)"
     ]
   }
 }

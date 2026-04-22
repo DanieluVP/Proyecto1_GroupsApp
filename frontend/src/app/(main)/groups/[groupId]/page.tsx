@@ -26,8 +26,24 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
   const [addingUserId, setAddingUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get<Group>(`/api/groups/${groupId}`).then((r) => setGroup(r.data)).catch(() => {});
-    api.get<Channel[]>(`/api/groups/${groupId}/channels`).then((r) => setChannels(r.data)).catch(() => {});
+    Promise.all([
+      api.get<Group>(`/api/groups/${groupId}`),
+      api.get<Channel[]>(`/api/groups/${groupId}/channels`),
+    ]).then(async ([groupRes, channelsRes]) => {
+      const g = groupRes.data;
+      // Enrich each member with user data from auth-service
+      if (g.groupMembers?.length) {
+        const userResults = await Promise.allSettled(
+          g.groupMembers.map((m) => api.get<User>(`/api/users/${m.userId}`))
+        );
+        g.groupMembers = g.groupMembers.map((m, i) => ({
+          ...m,
+          user: userResults[i].status === 'fulfilled' ? (userResults[i] as PromiseFulfilledResult<{ data: User }>).value.data : undefined,
+        }));
+      }
+      setGroup(g);
+      setChannels(channelsRes.data);
+    }).catch(() => {});
   }, [groupId]);
 
   const handleCreateChannel = async (e: React.FormEvent) => {
@@ -35,7 +51,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
     if (!newChannel.trim()) return;
     setCreating(true);
     try {
-      const r = await api.post<Channel>(`/api/groups/${groupId}/channels`, { name: newChannel.trim() });
+      const r = await api.post<Channel>(`/api/groups/${groupId}/channels`, { name: newChannel.trim(), description: '' });
       setChannels((p) => [...p, r.data]);
       setNewChannel('');
       setShowAddChannel(false);
@@ -56,7 +72,17 @@ export default function GroupPage({ params }: { params: Promise<{ groupId: strin
     try {
       await api.post(`/api/groups/${groupId}/members`, { userId });
       const r = await api.get<Group>(`/api/groups/${groupId}`);
-      setGroup(r.data);
+      const g = r.data;
+      if (g.groupMembers?.length) {
+        const userResults = await Promise.allSettled(
+          g.groupMembers.map((m) => api.get<User>(`/api/users/${m.userId}`))
+        );
+        g.groupMembers = g.groupMembers.map((m, i) => ({
+          ...m,
+          user: userResults[i].status === 'fulfilled' ? (userResults[i] as PromiseFulfilledResult<{ data: User }>).value.data : undefined,
+        }));
+      }
+      setGroup(g);
       setSearchResults((prev) => prev.filter((u) => u.id !== userId));
     } catch {}
     finally { setAddingUserId(null); }

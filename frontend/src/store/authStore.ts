@@ -6,6 +6,7 @@ import { User } from '@/types';
 interface AuthState {
   user: User | null;
   token: string | null;
+  initialized: boolean;
   setAuth: (user: User, token: string) => void;
   logout: () => void;
   init: () => void;
@@ -14,6 +15,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
+  initialized: false,
   setAuth: (user, token) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
@@ -29,11 +31,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     const userRaw = localStorage.getItem('user');
     if (token && userRaw) {
       try {
-        set({ token, user: JSON.parse(userRaw) });
+        set({ token, user: JSON.parse(userRaw), initialized: true });
       } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        set({ initialized: true });
       }
+    } else {
+      set({ initialized: true });
     }
   },
 }));

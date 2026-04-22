@@ -7,6 +7,7 @@ import { Plus, LogOut, MessageSquare } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { CreateGroupModal } from './CreateGroupModal';
 import { useAuth } from '@/hooks/useAuth';
+import { usePresenceStore } from '@/store/presenceStore';
 import api from '@/lib/api';
 import { Group } from '@/types';
 
@@ -15,6 +16,7 @@ export function GroupSidebar() {
   const [showCreate, setShowCreate] = useState(false);
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const { isOnline } = usePresenceStore();
 
   useEffect(() => {
     api.get<Group[]>('/api/groups').then((r) => setGroups(r.data)).catch(() => {});
@@ -35,11 +37,12 @@ export function GroupSidebar() {
       <nav className="flex flex-col gap-2 flex-1 overflow-y-auto w-full items-center">
         {groups.map((g) => {
           const active = isActive(`/groups/${g.id}`);
+          const onlineCount = (g.groupMembers ?? []).filter((m) => isOnline(m.userId)).length;
           return (
             <Link
               key={g.id}
               href={`/groups/${g.id}`}
-              title={g.name}
+              title={`${g.name}${onlineCount > 0 ? ` • ${onlineCount} online` : ''}`}
               className={`relative w-10 h-10 rounded-2xl flex items-center justify-center transition-all hover:rounded-xl ${
                 active ? 'rounded-xl bg-indigo-600' : 'bg-gray-700 hover:bg-indigo-600'
               }`}
@@ -49,6 +52,11 @@ export function GroupSidebar() {
               </span>
               {active && (
                 <span className="absolute -left-1 w-1 h-6 bg-white rounded-r-full" />
+              )}
+              {onlineCount > 0 && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-950 flex items-center justify-center text-[9px] font-bold text-white leading-none">
+                  {onlineCount}
+                </span>
               )}
             </Link>
           );
