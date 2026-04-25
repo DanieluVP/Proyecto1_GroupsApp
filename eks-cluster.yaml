@@ -1,0 +1,19 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: groupsapp-cluster
+  region: us-east-1
+  version: "1.31"
+
+iam:
+  serviceRoleARN: "arn:aws:iam::359451650024:role/LabRole"
+
+managedNodeGroups:
+  - name: workers
+    instanceType: t3.medium
+    minSize: 2
+    maxSize: 4
+    desiredCapacity: 2
+    iam:
+      instanceRoleARN: "arn:aws:iam::359451650024:role/LabRole"

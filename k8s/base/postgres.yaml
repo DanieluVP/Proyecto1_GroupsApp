@@ -42,8 +42,7 @@ spec:
             periodSeconds: 5
       volumes:
         - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-pvc
+          emptyDir: {}
         - name: init-scripts
           configMap:
             name: postgres-init
@@ -66,6 +65,7 @@ metadata:
   name: postgres-pvc
   namespace: groupsapp
 spec:
+  storageClassName: gp2-csi
   accessModes:
     - ReadWriteOnce
   resources:

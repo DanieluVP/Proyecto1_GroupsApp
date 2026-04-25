@@ -22,7 +22,7 @@ export function GroupSidebar() {
     api.get<Group[]>('/api/groups').then((r) => setGroups(r.data)).catch(() => {});
   }, []);
 
-  const isActive = (path: string) => pathname.startsWith(path);
+  const isActive = (path: string) => pathname?.startsWith(path) ?? false;
 
   return (
     <aside className="w-16 bg-gray-950 flex flex-col items-center py-3 gap-2 flex-shrink-0">

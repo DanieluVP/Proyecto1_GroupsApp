@@ -29,8 +29,7 @@ spec:
               mountPath: /data
       volumes:
         - name: redis-data
-          persistentVolumeClaim:
-            claimName: redis-pvc
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -50,6 +49,7 @@ metadata:
   name: redis-pvc
   namespace: groupsapp
 spec:
+  storageClassName: gp2-csi
   accessModes:
     - ReadWriteOnce
   resources:

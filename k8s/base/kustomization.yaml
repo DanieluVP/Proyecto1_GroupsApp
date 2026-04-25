@@ -9,11 +9,14 @@ resources:
   # Config
   - secrets.yaml
   - configmap.yaml
+  # Storage
+  - storageclass.yaml
   # Infrastructure
   - postgres.yaml
   - redis.yaml
   - kafka.yaml
   - consul.yaml
+  # Note: zookeeper removed, kafka runs in KRaft mode
   # Microservices
   - auth-service.yaml
   - groups-service.yaml
@@ -26,3 +29,26 @@ resources:
   - ingress.yaml
   # Autoscaling
   - hpa.yaml
+
+images:
+  - name: groupsapp/api-gateway
+    newName: 359451650024.dkr.ecr.us-east-1.amazonaws.com/groupsapp/api-gateway
+    newTag: latest
+  - name: groupsapp/auth-service
+    newName: 359451650024.dkr.ecr.us-east-1.amazonaws.com/groupsapp/auth-service
+    newTag: latest
+  - name: groupsapp/groups-service
+    newName: 359451650024.dkr.ecr.us-east-1.amazonaws.com/groupsapp/groups-service
+    newTag: latest
+  - name: groupsapp/messaging-service
+    newName: 359451650024.dkr.ecr.us-east-1.amazonaws.com/groupsapp/messaging-service
+    newTag: latest
+  - name: groupsapp/presence-service
+    newName: 359451650024.dkr.ecr.us-east-1.amazonaws.com/groupsapp/presence-service
+    newTag: latest
+  - name: groupsapp/files-service
+    newName: 359451650024.dkr.ecr.us-east-1.amazonaws.com/groupsapp/files-service
+    newTag: latest
+  - name: groupsapp/frontend
+    newName: 359451650024.dkr.ecr.us-east-1.amazonaws.com/groupsapp/frontend
+    newTag: latest

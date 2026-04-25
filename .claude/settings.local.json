@@ -18,7 +18,9 @@
       "Bash(curl -sv -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"test3@example.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"Test1234!\"\"\"\"}')",
       "Bash(./node_modules/.bin/tsc -p tsconfig.build.json)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/socket.io/?EIO=4&transport=polling\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006)",
+      "PowerShell(Invoke-WebRequest -Uri \"https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_Windows_amd64.zip\" -OutFile \"$env:TEMP\\\\eksctl.zip\" -UseBasicParsing; Expand-Archive \"$env:TEMP\\\\eksctl.zip\" -DestinationPath \"$env:TEMP\\\\eksctl\" -Force; Copy-Item \"$env:TEMP\\\\eksctl\\\\eksctl.exe\" \"C:\\\\Windows\\\\System32\\\\eksctl.exe\" -Force; eksctl version)",
+      "PowerShell(Invoke-WebRequest -Uri \"https://get.helm.sh/helm-v3.17.3-windows-amd64.zip\" -OutFile \"$env:TEMP\\\\helm.zip\" -UseBasicParsing; Expand-Archive \"$env:TEMP\\\\helm.zip\" -DestinationPath \"$env:TEMP\\\\helm\" -Force; Copy-Item \"$env:TEMP\\\\helm\\\\windows-amd64\\\\helm.exe\" \"C:\\\\Users\\\\user\\\\helm.exe\" -Force; & \"C:\\\\Users\\\\user\\\\helm.exe\" version)"
     ]
   }
 }
